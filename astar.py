@@ -10,6 +10,7 @@ COLOR_INITIAL =		[0,		0,		255]
 COLOR_DESTINATION =	[255,	0,		0  ]
 COLOR_WALL =		[0,		255,	0  ]
 COLOR_PATH = 		[0,		0,		0  ]
+dd = np.sqrt(2) #Diagonal distance
 
 class Node:
 	def __init__(self, point, best_parent, cost, heuristic=None):
@@ -46,10 +47,21 @@ class Map:
 
 		self.obstacles = np.full((height,width), False, dtype=np.bool)
 
+#Info about heuristics:
+#http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
+
 #Calculates the heuristic for the node using the
 #euclidian distance to the destination point
 def calculateHeuristic_ed(node, map):
 	node.heuristic = euclidianDistance(node.point, map.dest_point)
+
+#Calculates the heuristic for the node using the
+#octile distance to the destination point
+def calculateHeuristic_od(node, map):
+	dr = abs(node.point[0] - map.dest_point[0]) #Distance in rows
+	dc = abs(node.point[1] - map.dest_point[1]) #Distance in columns
+
+	node.heuristic = (dr + dc) + (dd - 2) * min(dr, dc)
 
 def euclidianDistance(pA, pB):
 	return np.sqrt((pA[0]-pB[0])**2 + (pA[1]-pB[1])**2)
@@ -70,12 +82,12 @@ def generateChildren(node, map):
 
 				#If it's on a diagonal, the increment in cost is sqrt(2)
 				#If not it's 1
-				d_cost = 1.41
+				d_cost = dd #Diagonal distance
 				if (i==0) or (j==0):
 					d_cost = 1.0
 
 				child = Node((row, col), node.point, node.cost + d_cost)
-				calculateHeuristic_ed(child, map)
+				calculateHeuristic_od(child, map)
 				children.append(child)
 
 	return children
@@ -139,7 +151,7 @@ def updateNodeInfo(node, closed_set):
 			if closed_set[i].best_parent == node.point:
 				desc = closed_set[i]
 				#Distance to parent
-				dist = 1.41
+				dist = dd #Diagonal distance
 				if desc.point[0] == node.point[0] or desc.point[1] == node.point[1]:
 					dist = 1.0
 
